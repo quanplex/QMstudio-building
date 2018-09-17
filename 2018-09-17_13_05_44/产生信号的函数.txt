@@ -1,0 +1,45 @@
+par=c(5, 15, 5)
+N.min=5
+
+{
+    X <- fill(X, 开盘价:复权因子, .direction = "up")
+    X <- X[, {
+        G <- copy(.SD)
+        close <- rev(收盘价/复权因子)
+        DIFF <- MACD(close, nFast = par[1], nSlow = par[2], nSig = par[3], 
+            maType = "SMA")[, 1]
+        EDA <- MACD(close, nFast = par[1], nSlow = par[2], nSig = par[3], 
+            maType = "SMA")[, 2]
+        macd.prime = DIFF - EDA
+        G <- G[, `:=`(c("DIFF", "EDA", "macd.prime"), list(rev(DIFF), 
+            rev(EDA), rev(macd.prime)))]
+    }, by = .(预测日期, stockcode)]
+    Z <- X[, {
+        y <- rev(macd.prime[1:3])
+        fg <- QMbake_cross(macd.prime, 0, winsize = 4)
+        fg.up <- fg$up
+        fg.dn <- fg$down
+        if (!is.na(fg.up)) {
+            ols <- lm(rev(macd.prime[1:10]) ~ c(1:10))
+            MACDrt <- ols$coefficient[2]
+            MACD01 <- ifelse(DIFF[fg.up] > 0 & MACDrt > 0.3, 
+                1, 0)
+        }
+        else {
+            MACDrt <- 0
+            MACD01 <- 0
+        }
+        list(股票表现 = 股票表现[1], MACD_ratio = MACDrt, 
+            MACD_deter = MACD01)
+    }, by = .(预测日期, stockcode)]
+    path <- str_replace_all(Sys.time(), "( |\\:)", "_")
+    dir.create(path)
+    QMtaste_SignalPerf(Z, "MACD_ratio", type = "ratio", file = path)
+    QMtaste_SignalPerf(Z, "MACD_deter", type = "0-1", file = path)
+    explore <- str_c("par=", deparse(par), "\n", "N.min=", deparse(N.min), 
+        "\n")
+    write(explore, file = str_c(str_c("./", path, "/"), "产生信号的函数.txt"))
+    write(deparse(body()), file = str_c(str_c("./", path, "/"), 
+        "产生信号的函数.txt"), append = T)
+    return(Z)
+}
