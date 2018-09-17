@@ -1,0 +1,7 @@
+5
+6
+
+{
+    write(str_c(deparse(a), "\n", deparse(b), "\n"), "see.txt")
+    write(deparse(body()), "see.txt", append = T)
+}
