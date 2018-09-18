@@ -78,24 +78,19 @@ QMgen_test_MACD <- function(X,par=c(12,26,9),N.min=5){
   
   Z <-X[,{
     y <-rev(macd.prime[1:3])
-    fg <- QMbake_cross(macd.prime,0,winsize = 4)
+    fg <- QMbake_cross(macd.prime,0,winsize = 3)
     fg.up <- fg$up
     fg.dn <- fg$down
-    # if (!is.na(fg.up)){
-    #   ols <- lm(rev(macd.prime[1:10])~c(1:10))
-    #   MACDrt <- ols$coefficient[2]
-    #   #close <- 收盘价/复权因子;close <- close[1:30];close<-rev(close)
-    #   #resist.slope <- QMbake_valleytrend(close,N.min=N.min)$confirm.trend
-    #   #MACD01 <- ifelse(!is.na(resist.slope) & resist.slope<=0 & EDA[fg.up]>0,1,0)
-    #   MACD01 <- ifelse(DIFF[fg.up]>0 & MACDrt>0.5,1,0)
-    # }else{
-    #   MACDrt <-0
-    #   MACD01<-0
-    # }
-    ols <- lm(rev(macd.prime[1:10])~c(1:10))
-    MACDrt <- ols$coefficient[2]
-    y <- macd.prime
-    MACD01 <- ifelse(y[1]>y[2] & y[2]<y[3] & y[3]<y[4] & y[4]< y[5] & y[5]<y[6],1,0)
+    if (!is.na(fg.up)){
+      nt <-7
+      MACDrt <- lm(rev(macd.prime[1:nt])~c(1:nt))$coefficient[2]
+      close <- 收盘价/复权因子
+      slope.respect <-lm(rev(close[1:nt])~c(1:nt))$coefficient[2]
+      MACD01 <- ifelse(slope.respect<0.5,1,0)
+    }else{
+      MACDrt <-0
+      MACD01<-0
+    }
     list(股票表现=股票表现[1], MACD_ratio=MACDrt,MACD_deter=MACD01)
   },by=.(预测日期,stockcode)]
   path <- str_replace_all(Sys.time(),"( |\\:)","_")
