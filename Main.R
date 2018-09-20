@@ -24,6 +24,7 @@ source("QMupdate系列函数.R")
 source("QMtaste系列函数.R")
 source("QMbake系列函数.R")
 source("QMgen系列函数.R")
+
 # 加载数据=====
 con <- dbConnect(SQLite(),"QM_Data.sqlite")
 tablelist <- dbListTables(con)
@@ -56,10 +57,12 @@ QMtaste_SignalPerf(VX,signal="sig1")
 
 QMgen_test_Qstick(A1,4,0.6) 
 QMgen_test_Rsquare(A1,75,0.3,0.3) 
-QMgen_test_MACD(A1,par=c(5,15,5),N.min=5)
 
 lin<- function(a=5,b=6){
   write(str_c(deparse(a),"\n",deparse(b),"\n"),"see.txt")
   write(deparse(body()),"see.txt",append = T)
 }
 lin()
+
+QMgen_test_MACD(A1,par=c(5,14,5),N.min=5)
+

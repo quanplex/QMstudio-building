@@ -28,8 +28,13 @@ QMgen_test_Qstick <- function(X,n=4,cv){
     }
     list(股票表现=股票表现, Qstick_ratio=SGratio,Qstick_deter=SG01)
   },by=.(预测日期,stockcode)]
-  QMtaste_SignalPerf(Z,"Qstick_ratio",type="ratio")
-  QMtaste_SignalPerf(Z,"Qstick_deter",type="0-1")
+  path <- str_replace_all(Sys.time(),"( |\\:)","_")
+  dir.create(path)
+  QMtaste_SignalPerf(Z,"Qstick_ratio",type="ratio",file=path)
+  QMtaste_SignalPerf(Z,"Qstick_deter",type="0-1",file=path)
+  explore <- str_c("n=",deparse(n),"\n","cv=",deparse(cv),"\n")
+  write(explore,file=str_c(str_c("./",path,"/"),"产生信号的函数.txt"))
+  write(deparse(body()),file=str_c(str_c("./",path,"/"),"产生信号的函数.txt"),append = T)
   return(Z)
 }
 
@@ -54,7 +59,12 @@ QMgen_test_Rsquare <- function(X, n=75, cv.rsq=0.3, cv.coe=0.5){
   },by=.(预测日期,stockcode)]
   
   Z <- Y[,Rsquare_deter:=ifelse(rsq> cv.rsq & coe> cv.coe,1,0)]
-  QMtaste_SignalPerf(Z,"Rsquare_deter",type="0-1")
+  path <- str_replace_all(Sys.time(),"( |\\:)","_")
+  dir.create(path)
+  QMtaste_SignalPerf(Z,"Rsquare_deter",type="0-1",file=path)
+  explore <- str_c("n=",deparse(n),"\n","cv.rsq=",deparse(cv.rsq),"\n","cv.coe=",deparse(cv.coe))
+  write(explore,file=str_c(str_c("./",path,"/"),"产生信号的函数.txt"))
+  write(deparse(body()),file=str_c(str_c("./",path,"/"),"产生信号的函数.txt"),append = T)
   return(Z)
 }
 
@@ -63,7 +73,6 @@ QMgen_test_MACD <- function(X,par=c(12,26,9),N.min=5){
   # X : A1 型的抽样矩阵
   # par : 计算MACD(a,b,c)时的 a,b,c 三元组参数向量
   # N.min: 计算支撑线的最小窗口长度
-  # 测试目标：MACD 柱抽脚
   #====================
   X <- fill(X,开盘价:复权因子,.direction="up")
   
@@ -77,16 +86,21 @@ QMgen_test_MACD <- function(X,par=c(12,26,9),N.min=5){
   },by=.(预测日期,stockcode)]
   
   Z <-X[,{
-    y <-rev(macd.prime[1:3])
-    fg <- QMbake_cross(macd.prime,0,winsize = 3)
+    y<-rev(macd.prime[1:10])
+    fg <- QMbake_cross(macd.prime,0,winsize = 1)
     fg.up <- fg$up
     fg.dn <- fg$down
     if (!is.na(fg.up)){
-      nt <-7
-      MACDrt <- lm(rev(macd.prime[1:nt])~c(1:nt))$coefficient[2]
-      close <- 收盘价/复权因子
-      slope.respect <-lm(rev(close[1:nt])~c(1:nt))$coefficient[2]
-      MACD01 <- ifelse(slope.respect<0.5,1,0)
+      # close<-收盘价/复权因子
+      # close<-close[1:7]
+      # close<-rev(close)
+      # sr <-lm(close~ c(1:7))$coefficient[2]
+      MACDrt <-lm(y~ c(1:10))$coefficient[2]
+      # MACD01 <- ifelse(!any(rev(EDA[1:7])[(fg.up+1):7]-close[(fg.up+1):7]>0) 
+      #                  & DIFF[fg.up]>0
+      #                  & MACDrt>0.4
+      #                  & sr<0.3,1,0)
+      MACD01 <- ifelse(macd.prime[1]>0,1,0)
     }else{
       MACDrt <-0
       MACD01<-0

@@ -21,6 +21,7 @@ QMtaste_SignalPerf <-function(X,signal,type="0-1",file=NA){
     cat("真阳性率为 ",spc,"\n")
     cat("阳性预测率 ",npv,"\n")
     cat("阴性预测率 ",ppv,"\n")
+    print(filename)
     write(str_c("总体精确度为 ",acc,"\n真阳性率为 ",spc,"\n阳性预测率 ",npv,"\n阴性预测率 ",ppv),
           file=str_c(filename,"_总体效果评估报告.txt"))
     data.1 <- data[,{
