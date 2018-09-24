@@ -5,6 +5,7 @@ QMtaste_SignalPerf <-function(X,signal,type="0-1",file=NA){
   data=X[,list(predictdate=预测日期,stockcode=stockcode,performance=股票表现,signal=X[[signal]])]
   if(is.na(file)){
     filename=str_c("./",path,"/",signal)
+    dir.create(path)
   } else{
     filename=str_c("./",file,"/",signal)
   }
